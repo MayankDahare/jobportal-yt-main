@@ -18,11 +18,36 @@ export const register = async (req, res) => {
         const file = req.file;
 
         // ✅ FIX: only upload if file exists
-        let cloudResponse = null;
-        if (file) {
-            const fileUri = getDataUri(file);
-            cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-        }
+       let cloudResponse = null;
+
+if (file) {
+
+    const streamUpload = () => {
+        return new Promise((resolve, reject) => {
+
+            const stream = cloudinary.uploader.upload_stream(
+                {
+                    resource_type: "raw",
+                    folder: "resumes",
+                    public_id: file.originalname.split(".")[0],
+                },
+                (error, result) => {
+                    if (result) resolve(result);
+                    else reject(error);
+                }
+            );
+
+            stream.end(file.buffer);
+        });
+    };
+
+    cloudResponse = await streamUpload();
+
+    user.profile.resume = cloudResponse.secure_url;
+    user.profile.resumeOriginalName = file.originalname;
+}
+
+
 
         const user = await User.findOne({ email });
         if (user) {

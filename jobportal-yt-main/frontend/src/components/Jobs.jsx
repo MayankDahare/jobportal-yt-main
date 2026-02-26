@@ -12,17 +12,49 @@ const Jobs = () => {
     const [filterJobs, setFilterJobs] = useState(allJobs);
 
     useEffect(() => {
-        if (searchedQuery) {
-            const filteredJobs = allJobs.filter((job) => {
-                return job.title.toLowerCase().includes(searchedQuery.toLowerCase()) ||
-                    job.description.toLowerCase().includes(searchedQuery.toLowerCase()) ||
-                    job.location.toLowerCase().includes(searchedQuery.toLowerCase())
-            })
-            setFilterJobs(filteredJobs)
-        } else {
-            setFilterJobs(allJobs)
+
+    if (!searchedQuery || Object.keys(searchedQuery).length === 0) {
+        setFilterJobs(allJobs)
+        return
+    }
+
+    const filteredJobs = allJobs.filter((job) => {
+
+        // Location filter
+        const locationMatch =
+            !searchedQuery[0] ||
+            job.location.toLowerCase() === searchedQuery[0].toLowerCase()
+
+        // Industry filter (based on title)
+        const industryMatch =
+            !searchedQuery[1] ||
+            job.title.toLowerCase().includes(searchedQuery[1].toLowerCase())
+
+        // Salary filter
+        let salaryMatch = true
+
+        if (searchedQuery[2]) {
+
+            if (searchedQuery[2] === "0-40k") {
+                salaryMatch = job.salary <= 40000
+            }
+
+            else if (searchedQuery[2] === "42-1lakh") {
+                salaryMatch = job.salary >= 42000 && job.salary <= 100000
+            }
+
+            else if (searchedQuery[2] === "1lakh to 5lakh") {
+                salaryMatch = job.salary >= 100000 && job.salary <= 500000
+            }
         }
-    }, [allJobs, searchedQuery]);
+
+        return locationMatch && industryMatch && salaryMatch
+
+    })
+
+    setFilterJobs(filteredJobs)
+
+}, [allJobs, searchedQuery])
 
     return (
         <div>
